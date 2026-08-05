@@ -16,7 +16,9 @@ Thirteen phases (0–12). Each entry gives: the goal, the model and settings to 
 2. Set the model with `/model` per the phase entry.
 3. Auto-accept stays on throughout, as in your other projects. Paste the prompt and let it run.
 
-**Thinking depth.** Claude Code allocates more internal reasoning budget when a prompt contains one of these phrases, in ascending order: `think` → `think hard` → `think harder` → `ultrathink`. These are informal cues, not a documented API parameter with guaranteed behavior — treat the ordering as reliable and the exact token amounts as unconfirmed. Each phase's prompt block below opens with a sentence containing the assigned phrase verbatim, so pasting the block as-is invokes it — this only works because the literal words are inside the pasted text, not because of the `**Thinking:**` label above the block. If a phase is struggling with something the assigned level didn't anticipate, just tell Claude directly mid-session — e.g. "ultrathink about this specific problem" — rather than assuming the original prompt's level was exactly right.
+**Effort setting.** When you run `/model`, the popup also lets you set **Effort**: Low, Medium, High, Extra High (xhigh), Max. This is the real, documented control — separate from the model choice, and separate from the `think`/`ultrathink` text triggers below. Each phase entry below now gives you an explicit **Effort:** level. Set it in the popup alongside the model before pasting the prompt.
+
+**Text-trigger words (optional, stacks with Effort).** Claude Code also allocates extra reasoning budget when a prompt contains `think` / `think hard` / `think harder` / `ultrathink`, in ascending order. This is an informal cue, not a separate documented parameter, and it stacks with whatever Effort level you've set — it does not replace it. Each phase's prompt block already opens with a sentence containing the phase's assigned phrase, so pasting the block as-is invokes it. Effort is doing the real work; the trigger word is a small additional nudge on top.
 
 **Your review checkpoint is the diff, not a plan step.** Phases marked **Review: close** are ones where a wrong turn is expensive to unwind — Phase 0 (directory layout), Phase 2 and Phase 4 (physics feel), and Phase 7a (course system architecture) — everything after builds on them. On those, actually read `git diff` before committing, not just skim the chat summary. Phases marked **Review: light** are lower-stakes; a skim of STATUS.md's summary is enough. CLAUDE.md §2.9 still has Claude Code stop and ask you directly when something is ambiguous — that's independent of auto-accept and works the same as your other projects.
 
@@ -42,6 +44,7 @@ One caveat on Fable 5: a small fraction of sessions get routed to Opus 5 by safe
 **Goal:** Empty but correct skeleton. Nothing playable. Everything in the right place.
 
 **Model:** Sonnet 5
+**Effort:** Medium — well-specified scaffolding work
 **Thinking:** `think`
 **Review:** close — directory layout is expensive to change later
 
@@ -109,6 +112,7 @@ place the directory layout in CLAUDE.md felt wrong once you tried to build it.
 **Goal:** A black 256×240 portrait canvas, correctly scaled, running a 60 Hz simulation with a debug overlay proving it.
 
 **Model:** Opus 5
+**Effort:** High — timing correctness the whole loop depends on
 **Thinking:** `think hard`
 **Review:** close — the fixed-timestep model everything else builds on
 
@@ -193,6 +197,7 @@ count instead of using secondsToTicks.
 **Goal:** A controllable car on a blank field. The single most important phase for game feel.
 
 **Model:** Fable 5
+**Effort:** Max — the physics feel everything else depends on
 **Thinking:** `ultrathink`
 **Review:** close — this defines how the game feels
 
@@ -279,6 +284,7 @@ Tell me which numbers you guessed and how confident you are in each.
 **Goal:** A scrolling road with lethal edges and the seven segment archetypes.
 
 **Model:** Opus 5
+**Effort:** High — geometry every course depends on
 **Thinking:** `think hard`
 **Review:** close — road geometry underpins every level
 
@@ -354,6 +360,7 @@ guessing.
 **Goal:** The other half of the game's identity. Ricochet, directional bump asymmetry, chain reactions.
 
 **Model:** Fable 5
+**Effort:** Max — combat feel — the other half of the game's identity
 **Thinking:** `ultrathink`
 **Review:** close — this defines how the game feels
 
@@ -432,6 +439,7 @@ guesses, and which single constant you think matters most for Phase 11 calibrati
 **Goal:** Ten vehicle behaviour profiles driving on the road.
 
 **Model:** Opus 5
+**Effort:** High — several interacting AI states
 **Thinking:** `think hard`
 **Review:** light
 
@@ -503,6 +511,7 @@ Run tests, update STATUS.md, commit as
 **Goal:** The non-bumpable threat class and the level-dependent rules around it.
 
 **Model:** Sonnet 5
+**Effort:** Medium — conditional rules, well-specified
 **Thinking:** `think hard`
 **Review:** light
 
@@ -571,6 +580,7 @@ Run tests, update STATUS.md, commit as
 **Goal:** The course composition system, seasonal theming, difficulty ramp, and 8 playable courses. Full 32-course authoring is deferred to a later changeset.
 
 **Model:** Opus 5 for the composition system, then Sonnet 5 for the authoring pass. Split this phase into two prompts.
+**Effort:** High for 7a, Medium for 7b — architecture vs. data authoring against a fixed system
 
 **Thinking:** `think hard`
 **Review:** close for 7a (composition system architecture), light for 7b (data authoring)
@@ -684,6 +694,7 @@ Finish by telling me which of the eight you think is weakest and why.
 **Goal:** Every number from spec §7, exactly.
 
 **Model:** Sonnet 5
+**Effort:** Medium — well-specified numeric rules
 **Thinking:** `think hard`
 **Review:** light
 
@@ -741,6 +752,7 @@ Run tests, update STATUS.md, commit as
 **Goal:** It becomes an actual arcade game rather than a physics toy.
 
 **Model:** Sonnet 5
+**Effort:** High — a state machine wrapping the whole game
 **Thinking:** `think hard`
 **Review:** light
 
@@ -804,6 +816,7 @@ Run tests, update STATUS.md, commit as
 **Goal:** PSG-style synthesised audio. No sampled assets.
 
 **Model:** Opus 5
+**Effort:** High — an audio engine with real interaction points
 **Thinking:** `think hard`
 **Review:** light
 
@@ -869,6 +882,7 @@ Tell me which cues you invented wholesale because the GDD does not document them
 **Goal:** Turn a technically-correct simulation into something that feels like the original. This is the phase the whole architecture was built to enable.
 
 **Model:** Fable 5
+**Effort:** Max — you're the one judging feel — full reasoning helps translate it
 **Thinking:** `ultrathink`
 **Review:** close — but you're the reviewer for the tuning itself, not the code
 **Note:** This phase is iterative and involves *you* playing. Expect several sessions.
@@ -932,6 +946,7 @@ Commit the harness as `phase(11): calibration harness, replay, telemetry`.
 **Goal:** Ship it.
 
 **Model:** Sonnet 5, except the art direction pass — see note.
+**Effort:** High — polish, deploy correctness, IP audit
 **Thinking:** `think hard`
 **Review:** close — deploy and IP-audit step
 
