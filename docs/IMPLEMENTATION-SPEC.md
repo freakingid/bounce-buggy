@@ -22,7 +22,7 @@
 | Enemy sprites | 16 × 16 | `[D]` | |
 | Foreground tile | 8 × 8 | `[D]` | HUD/text |
 | Background tile | 16 × 16 | `[D]` | |
-| Background field width | 512 (2× play field) | `[D]` | Required for the screen-wrap jump. |
+| Background bitmap | 512 × 256 (width = 2× play field) | `[D]` | Width required for the screen-wrap jump. Height per GDD §9 (MAME `btime.cpp`); omitted from this table until now. |
 | Palette | Unconstrained | — | Original was 16 colours. Constrained palettes are an aesthetic option, not a requirement. |
 
 Deliberately dropped as obsolete hardware limits: 8 simultaneous sprites, 3bpp colour depth, integer-only scaling, PSG voice count.
