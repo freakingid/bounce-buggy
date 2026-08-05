@@ -19,8 +19,15 @@ export const PLAYFIELD_WIDTH = 256;
 /** Logical play field height, px. [D] §1 */
 export const PLAYFIELD_HEIGHT = 240;
 
-/** Simulation rate, Hz. Modern choice (original ran 57.44 Hz) — see CLAUDE.md §3.1. */
-export const SIM_HZ = 60;
+/**
+ * Simulation rate, Hz. Modern choice (original ran 57.44 Hz) — see CLAUDE.md §3.1.
+ *
+ * This is the ONLY place the tick rate is defined. Every duration in the
+ * project is authored in seconds and converted with `secondsToTicks()` from
+ * `core/loop.js` (CLAUDE.md §3.3), so changing this value rescales the whole
+ * simulation consistently instead of breaking every hardcoded tick count.
+ */
+export const TICK_RATE_HZ = 60;
 
 /** Player sprite size, px (square). [D] §1 */
 export const PLAYER_SPRITE_SIZE = 16;

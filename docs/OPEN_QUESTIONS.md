@@ -15,3 +15,4 @@ Seeded from GDD section 14.
 | OQ-08 | `!` warning lead time before a required jump (spec §5.4) | 1.5s | `tuning.js`: `JUMP_WARNING_LEAD_TIME_SEC` | Medium — reaction budget fairness |
 | OQ-09 | Homing strength for skull/hearse and white car AI (spec §4.2) | 0.5 (0-1 scale) | `tuning.js`: `HOMING_STEER_STRENGTH` | Medium — threat level of homing enemies |
 | OQ-10 | Bump chain-reaction propagation depth cap (spec §3.5) | 4 | `tuning.js`: `BUMP_CHAIN_MAX_DEPTH` | Low — score ceiling / runaway cascades |
+| OQ-11 | Analogue-stick deadzone for digitising gamepad steering. No spec basis — the original cabinet had an 8-way digital joystick, so this is purely a modern-port concern (CLAUDE.md §9) | 0.35 | `tuning.js`: `GAMEPAD_STICK_DEADZONE` | Low — gamepad steering only; keyboard is unaffected. Untested on real hardware as of Phase 1 |

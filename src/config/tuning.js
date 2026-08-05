@@ -134,6 +134,14 @@ export const PLAYER_HITBOX_INSET_PX = 0;
 /** How strongly a HOMING enemy steers toward player.x, 0-1 (imperfect tracking). // UNKNOWN */
 export const HOMING_STEER_STRENGTH = 0.5;
 
+// --- Unranked: input feel (no spec section — modern port concern) -----------
+// Controls: gamepad steering. Symptom if wrong: stick drifts, or needs a
+// full deflection to register. The original cabinet had an 8-way digital
+// joystick (CLAUDE.md §9), so an analogue stick has to be digitised somewhere.
+
+/** Analogue-stick magnitude below which an axis reads as centred, 0-1. // INFERRED */
+export const GAMEPAD_STICK_DEADZONE = 0.35;
+
 // --- Rank 15: chain propagation depth cap (spec §3.5) -----------------------
 // Controls: score ceiling. Symptom if wrong: runaway cascades.
 

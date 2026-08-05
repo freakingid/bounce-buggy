@@ -9,9 +9,19 @@
       margin: 0;
       height: 100%;
       background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      overflow: hidden;
+    }
+
+    /*
+     * The canvas fills the viewport; the 256x240 play field is scaled and
+     * letterboxed inside it by render/canvas.js, which needs a CSS box it can
+     * measure. Centring is done in the blit, not in CSS.
+     */
+    #game {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
     }
   </style>
 </head>

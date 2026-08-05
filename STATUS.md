@@ -7,13 +7,13 @@
 
 ## Current State
 
-**Phase:** 0 — Complete
+**Phase:** 1 — Complete
 **Last updated:** 2026-08-05
-**Build status:** Scaffolded. No gameplay yet.
-**Tests:** 6 passing / 29 todo / 0 failing (35 total)
-**Playable?** No
+**Build status:** Engine foundation running. No gameplay yet.
+**Tests:** 94 passing / 29 todo / 0 failing (123 total)
+**Playable?** No — black play field, debug overlay only.
 
-**One-line summary:** Full directory skeleton in place per CLAUDE.md §4. Constants, tuning surface, and seeded RNG fully implemented; everything else is a structurally-correct stub. Ready for Phase 1.
+**One-line summary:** Fixed-timestep 60 Hz loop, free-scaled 256×240 portrait canvas, input abstraction, event bus, and debug overlay are all implemented and running; entities, physics, and world are still stubs. Ready for Phase 2.
 
 ---
 
@@ -24,7 +24,7 @@ _Changeset CS01 — see `docs/IMPLEMENTATION-PHASE-CS01.md`_
 | Phase | Name | Status |
 |---|---|---|
 | 0 | Scaffold, tooling, test harness | Complete |
-| 1 | Render loop, canvas, fixed timestep | Not started |
+| 1 | Render loop, canvas, fixed timestep | Complete |
 | 2 | Player vehicle: speed model + jump | Not started |
 | 3 | Road system, scrolling, boundaries | Not started |
 | 4 | Collision + bump physics | Not started |
@@ -52,12 +52,26 @@ _Concrete, honest list of verified-working behaviour. Not aspirations._
 - `src/core/rng.js` — seeded PRNG (mulberry32): `create(seed)`, `next()`, `nextInt(min,max)`, `snapshot()`/`restore()`. Fully tested.
 - `index.html` — loads `src/main.js` as a module, black canvas, no console errors.
 
+- `src/core/loop.js` — fixed-timestep loop. `advance()` is a pure accumulator function (steps owed, residual, alpha, dropped steps); `createLoop()` wraps it with a tick counter and injectable clock/scheduler. Catch-up clamped to `MAX_CATCH_UP_STEPS` (5), surplus time discarded. `secondsToTicks()` / `secondsToTicksAt()` are the only route from an authored duration to ticks.
+
+- `src/render/canvas.js` — 256×240 offscreen backbuffer, blitted to a viewport-filling display canvas at the largest aspect-preserving (non-integer) scale, letterboxed black, `imageSmoothingEnabled = false` on both contexts, backing store in device pixels. Verified in headless Chrome at 800×600: scale 2.5×, offset (80, 0), dpr 1.
+
+- `src/core/input.js` — abstract `{up, down, left, right, jump, jumpJustPressed}`. Arrows + WASD + Space; gamepad d-pad, left stick (digitised against a deadzone), bottom face button. Simultaneous keys verified through real DOM events in headless Chrome. Sampled once per simulation tick from `update()`.
+
+- `src/core/events.js` — pub/sub with `on`/`off`/`once`/`emit`/`clear`/`listenerCount`. Dispatch iterates a copy, so a handler may unsubscribe itself mid-emit. Implemented and tested, but **not yet wired into anything** — Phase 10 (audio cues) is its first consumer.
+
+- `src/render/debugOverlay.js` — backtick toggles it. Shows FPS, ticks/sec (red when off 60), tick counter, accumulator, alpha, steps-last-frame, dropped steps, live input state, scale and dpr. Also draws the play-field outline, which is the only way to see the field boundary against a black letterbox.
+
+- `src/main.js` — wires canvas + input + loop + overlay. Samples input in `update()`, clears and presents in `render()`.
+
 ## What Is Stubbed or Faked
 
 _Anything present in the codebase but not really implemented. Be ruthless here — this is the section that prevents a future session from assuming something works._
 
-- `src/main.js` is inert — no bootstrap logic, just a header comment (Phase 1 wires it up).
-- Every module under `src/core/` (except `rng.js`), `src/render/`, `src/entities/`, `src/systems/`, `src/world/`, `src/game/`, `src/audio/` exports one or more functions that throw `new Error('not implemented')`. Structurally correct (JSDoc, valid imports/exports, entity factory contract per CLAUDE.md §5, `resolveBump` signature per spec §3.2) but do nothing.
+- **Gamepad support is untested against real hardware.** The mapping layer (`readGamepad`) is unit-tested against fake Gamepad-shaped objects, which proves the button-index and deadzone decisions but not that a physical pad enumerates the way the Standard Gamepad spec says. Nobody has held a controller and confirmed it. Button 0 = jump, 12–15 = d-pad, axes 0/1 = left stick.
+- `render/palette.js`, `render/sprites.js`, `core/stateMachine.js`, and everything under `src/entities/`, `src/systems/`, `src/world/`, `src/game/`, `src/audio/` still throw `new Error('not implemented')`. Structurally correct (JSDoc, valid imports/exports, entity factory contract per CLAUDE.md §5, `resolveBump` signature per spec §3.2) but do nothing.
+- The interpolation alpha is plumbed from `advance()` through `createLoop()` into `render(alpha, stats)`, but **nothing consumes it yet** — there are no entities with previous/current positions to interpolate between. Phase 2 is where it starts mattering.
+- `update()` in `main.js` does nothing but sample input. There is no simulation state.
 - `test/physics.test.js`, `bump.test.js`, `collision.test.js`, `scoring.test.js`, `courses.test.js` contain only `test.todo(...)` placeholders describing planned coverage — no real assertions yet, since the systems they'd test don't exist.
 
 ---
@@ -82,13 +96,44 @@ _Current values of the UNKNOWN constants from `src/config/tuning.js`. Update whe
 
 | Constant | Current value | Confidence | Notes |
 |---|---|---|---|
-| (populated in Phase 2) | | | |
+| `GAMEPAD_STICK_DEADZONE` | 0.35 | Low | Added Phase 1 (OQ-11). No spec basis — a modern-port concern only. Never validated on real hardware. |
+| (gameplay values populated in Phase 2) | | | |
 
 ---
 
 ## Work Log
 
 _Newest first. Date, what changed, what to watch out for._
+
+### 2026-08-05 — Phase 1: fixed-timestep loop, scaled canvas, input abstraction
+
+- Implemented `core/loop.js`, `core/input.js`, `core/events.js`, `render/canvas.js`, `render/debugOverlay.js`, and wired them together in `main.js`. Added `test/loop.test.js`, `test/input.test.js`, `test/events.test.js` (88 new assertions; suite is now 94 passing / 29 todo / 0 failing).
+
+- **Renamed `SIM_HZ` to `TICK_RATE_HZ`** in `constants.js`. The Phase 1 prompt names `TICK_RATE_HZ` explicitly and Phase 0 had already written `SIM_HZ`; nothing referenced it yet, so this was a free rename rather than two names for one concept. It is the only definition of the tick rate in the project.
+
+- **Timing contract, stated precisely because later phases will depend on it:** the loop tracks *elapsed real time*, not frame count. A simulated second of 144 Hz frame deltas can total a hair under 1.0 s in floating point and legitimately produce 59 steps, with the shortfall banked in the accumulator rather than lost. Tests assert "within one step of 60 per second" and "drift does not grow over a simulated minute" — asserting exactly 60 would be asserting a float coincidence, and would fail intermittently. Don't "fix" that assertion into an equality.
+
+- `advance()` is a pure function (accumulator, delta) → (steps, residual, alpha, droppedSteps), so the whole timing model is tested with no clock, browser, or timers. `createLoop()` takes injectable `now`/`requestFrame`/`cancelFrame`; the tests drive it through a fake scheduler.
+
+- Spiral-of-death clamp: at most 5 catch-up steps per frame, and **dropped time is discarded, not banked** — the residual is only the sub-step remainder, so the loop resumes in phase instead of owing 600 steps forever. `MAX_CATCH_UP_STEPS` lives in `loop.js`, not `constants.js`/`tuning.js`: it is engine safety policy, not a game value, and putting it on the tuning surface would invite someone to "tune" it.
+
+- `secondsToTicks()` has a deliberate rule worth knowing: **a positive duration never rounds down to zero ticks.** 0.004 s becomes 1 tick, not 0. A duration a designer bothered to author must happen; silently becoming instantaneous is a bug that is very hard to see. Zero is the only input that yields zero ticks. It also throws on negative/NaN durations — a NaN tick deadline is a timer that never fires and never explains itself.
+
+- **Nowhere was I tempted to hardcode a tick count.** No raw tick value exists outside `loop.js`. The only durations that entered this phase were the debug FPS/TPS averaging window (`METRICS_WINDOW_MS`, wall-clock milliseconds, presentation-only, never touches the simulation) and `MAX_CATCH_UP_STEPS` (a step *count*, not a duration).
+
+- Verified in headless Chrome, not just in unit tests: canvas scaling (800×600 window → scale 2.5×, offset (80, 0), 256×240 backbuffer, smoothing off on both contexts), simultaneous `ArrowUp`+`ArrowLeft`+`Space` through real DOM keyboard events, jump edge detection across samples, the press-and-release-between-samples latch, and the overlay actually writing pixels. Screenshot confirmed the portrait field centred with black letterbox bars.
+
+- **Watch out for:** assigning `canvas.width`/`height` resets *every* context property, including `imageSmoothingEnabled`. `canvas.js` re-applies it inside `resize()`. Drop that line and the game goes blurry on the next window resize, with nothing in the code to point at.
+
+- **Watch out for:** `devicePixelRatio` changes on browser zoom or a drag between monitors and does not reliably fire a resize event, so `present()` re-checks it each frame (a cheap property read, no layout).
+
+- **Untested:** gamepad support against real hardware — see "What Is Stubbed or Faked". Also untested: sustained 60 ticks/sec under a real `requestAnimationFrame` on a real display. Headless Chrome throttles rAF to a couple of frames under virtual time, so the 60 Hz / 120 Hz / 144 Hz behaviour is proven only against the injected fake scheduler. **This is the phase's acceptance criterion and still needs a human to open `index.html`, press backtick, and read the TPS line.**
+
+- Added `GAMEPAD_STICK_DEADZONE` (0.35, `// INFERRED`) to `tuning.js` and logged it as OQ-11. It has no spec basis at all — the original cabinet had an 8-way digital joystick, so digitising an analogue stick is purely a modern-port decision.
+
+- Noted for Phase 2 rather than built (CLAUDE.md §2.6): `render(alpha, stats)` already carries the interpolation alpha end-to-end, so entity rendering can interpolate from day one without a retrofit.
+
+---
 
 ### 2026-08-05 — Phase 0: scaffold complete
 
