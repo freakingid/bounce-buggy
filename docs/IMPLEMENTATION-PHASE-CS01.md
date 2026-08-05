@@ -14,13 +14,11 @@ Thirteen phases (0–12). Each entry gives: the goal, the model and settings to 
 
 1. Run `/clear` in Claude Code. **One phase per session** (CLAUDE.md §2.6). Do not carry context between phases — `CLAUDE.md` and `STATUS.md` are the handoff mechanism, and if they are not sufficient, that is a bug in those files worth fixing.
 2. Set the model with `/model` per the phase entry.
-3. Paste the prompt.
+3. Auto-accept stays on throughout, as in your other projects. Paste the prompt and let it run.
 
-**Thinking depth.** Claude Code escalates reasoning based on trigger words in your prompt. In ascending order: `think` → `think hard` → `think harder` → `ultrathink`. The prompts below already include the right keyword. Do not strip it.
+**Thinking depth.** Claude Code allocates more internal reasoning budget when a prompt contains one of these phrases, in ascending order: `think` → `think hard` → `think harder` → `ultrathink`. These are informal cues, not a documented API parameter with guaranteed behavior — treat the ordering as reliable and the exact token amounts as unconfirmed. Each phase's prompt block below opens with a sentence containing the assigned phrase verbatim, so pasting the block as-is invokes it — this only works because the literal words are inside the pasted text, not because of the `**Thinking:**` label above the block. If a phase is struggling with something the assigned level didn't anticipate, just tell Claude directly mid-session — e.g. "ultrathink about this specific problem" — rather than assuming the original prompt's level was exactly right.
 
-**Plan Mode.** Press `Shift+Tab` twice to enter Plan Mode. In Plan Mode, Claude Code proposes an approach and waits for approval before writing files. Phases marked *Plan Mode: yes* are ones where a wrong approach is expensive to unwind — read the plan properly before approving.
-
-**Auto-accept edits.** `Shift+Tab` once toggles auto-accept. Use it only on phases marked *Auto-accept: safe*. On architecture phases, review diffs.
+**Your review checkpoint is the diff, not a plan step.** Phases marked **Review: close** are ones where a wrong turn is expensive to unwind — Phase 0 (directory layout), Phase 2 and Phase 4 (physics feel), and Phase 7a (course system architecture) — everything after builds on them. On those, actually read `git diff` before committing, not just skim the chat summary. Phases marked **Review: light** are lower-stakes; a skim of STATUS.md's summary is enough. CLAUDE.md §2.9 still has Claude Code stop and ask you directly when something is ambiguous — that's independent of auto-accept and works the same as your other projects.
 
 **Model selection rationale:**
 
@@ -45,10 +43,11 @@ One caveat on Fable 5: a small fraction of sessions get routed to Opus 5 by safe
 
 **Model:** Sonnet 5
 **Thinking:** `think`
-**Plan Mode:** yes
-**Auto-accept:** safe after plan approval
+**Review:** close — directory layout is expensive to change later
 
 ```
+think about this phase before writing anything.
+
 Read CLAUDE.md and docs/IMPLEMENTATION-SPEC.md in full before doing anything.
 Consult docs/GDD.md only where the spec is ambiguous.
 
@@ -111,10 +110,11 @@ place the directory layout in CLAUDE.md felt wrong once you tried to build it.
 
 **Model:** Opus 5
 **Thinking:** `think hard`
-**Plan Mode:** yes
-**Auto-accept:** review diffs
+**Review:** close — the fixed-timestep model everything else builds on
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 1 before starting.
 
 Phase 1: the render and timing foundation.
@@ -194,10 +194,11 @@ count instead of using secondsToTicks.
 
 **Model:** Fable 5
 **Thinking:** `ultrathink`
-**Plan Mode:** yes
-**Auto-accept:** review every diff
+**Review:** close — this defines how the game feels
 
 ```
+Ultrathink about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md sections 2 and 11 before starting.
 
 Phase 2: the player vehicle. This is the phase that determines whether the game
@@ -279,9 +280,11 @@ Tell me which numbers you guessed and how confident you are in each.
 
 **Model:** Opus 5
 **Thinking:** `think hard`
-**Plan Mode:** yes
+**Review:** close — road geometry underpins every level
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md sections 5.4 and 6.1 before starting.
 
 Phase 3: the road and the world it scrolls through.
@@ -352,10 +355,11 @@ guessing.
 
 **Model:** Fable 5
 **Thinking:** `ultrathink`
-**Plan Mode:** yes
-**Auto-accept:** review every diff
+**Review:** close — this defines how the game feels
 
 ```
+Ultrathink about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 3 before starting.
 
 Phase 4: bump physics. Alongside Phase 2, this defines the game's feel. Spec section
@@ -429,9 +433,11 @@ guesses, and which single constant you think matters most for Phase 11 calibrati
 
 **Model:** Opus 5
 **Thinking:** `think hard`
-**Plan Mode:** yes
+**Review:** light
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md sections 4 and 10 before starting.
 
 Phase 5: enemy vehicles.
@@ -498,9 +504,11 @@ Run tests, update STATUS.md, commit as
 
 **Model:** Sonnet 5
 **Thinking:** `think hard`
-**Plan Mode:** no
+**Review:** light
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 5 before starting.
 
 Phase 6: trucks and debris. These rules are highly conditional — implement the
@@ -565,11 +573,13 @@ Run tests, update STATUS.md, commit as
 **Model:** Opus 5 for the composition system, then Sonnet 5 for the authoring pass. Split this phase into two prompts.
 
 **Thinking:** `think hard`
-**Plan Mode:** yes for 7a
+**Review:** close for 7a (composition system architecture), light for 7b (data authoring)
 
 ### Phase 7a — course composition system (Opus 5)
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 6 before starting.
 
 Phase 7a: the course composition system. Data only in 7b — this prompt is the
@@ -675,9 +685,11 @@ Finish by telling me which of the eight you think is weakest and why.
 
 **Model:** Sonnet 5
 **Thinking:** `think hard`
-**Plan Mode:** no
+**Review:** light
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 7 before starting.
 
 Phase 8: scoring. Every value here is documented — implement them exactly and write a
@@ -730,9 +742,11 @@ Run tests, update STATUS.md, commit as
 
 **Model:** Sonnet 5
 **Thinking:** `think hard`
-**Plan Mode:** yes
+**Review:** light
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 9 before starting.
 
 Phase 9: the wrapper around the gameplay.
@@ -791,9 +805,11 @@ Run tests, update STATUS.md, commit as
 
 **Model:** Opus 5
 **Thinking:** `think hard`
-**Plan Mode:** yes
+**Review:** light
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, and docs/IMPLEMENTATION-SPEC.md section 8 before starting.
 
 Phase 10: audio. All audio is SYNTHESISED at runtime via WebAudio. We ship no audio
@@ -854,10 +870,12 @@ Tell me which cues you invented wholesale because the GDD does not document them
 
 **Model:** Fable 5
 **Thinking:** `ultrathink`
-**Plan Mode:** yes
+**Review:** close — but you're the reviewer for the tuning itself, not the code
 **Note:** This phase is iterative and involves *you* playing. Expect several sessions.
 
 ```
+Ultrathink about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, docs/OPEN_QUESTIONS.md, docs/IMPLEMENTATION-SPEC.md
 section 11, and
 src/config/tuning.js in full before starting.
@@ -915,9 +933,11 @@ Commit the harness as `phase(11): calibration harness, replay, telemetry`.
 
 **Model:** Sonnet 5, except the art direction pass — see note.
 **Thinking:** `think hard`
-**Plan Mode:** yes
+**Review:** close — deploy and IP-audit step
 
 ```
+think hard about this phase before writing anything.
+
 Read CLAUDE.md, STATUS.md, docs/IMPLEMENTATION-SPEC.md section 9, and
 docs/GDD.md section 13 (IP) before starting.
 
